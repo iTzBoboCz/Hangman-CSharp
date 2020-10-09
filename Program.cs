@@ -65,10 +65,10 @@ Made by Ondřej Pešek
             char input = '\0';
             string output = String.Empty;
             
-            Console.WriteLine($"{won} 🏆 | {lost} ☠");
+            Console.WriteLine($"{won} won | {lost} lost");
 
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(new String('❤', lives));
+            Console.WriteLine(new String((char)3, lives)); // (char)3 = ♥
             Console.ResetColor();
 
             // existují již nějaká uhodnutá písmena?
