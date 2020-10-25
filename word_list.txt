@@ -1,4 +1,6 @@
-barva
-kniha
-medved
-rybnik
+hat
+fish
+recipe
+emotion
+statement
+development
