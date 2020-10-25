@@ -23,60 +23,118 @@ Made by Ondřej Pešek
 -----------------------------------------------
 ");
 
-      if (!File.Exists(@"word_list.txt"))
-      {
-        Console.WriteLine("File with words doesn't exist. Creating one!");
-        using (StreamWriter writer = File.AppendText(@"word_list.txt"))
-        {
-          string[] wordsDefault = { "hat", "fish", "recipe", "emotion", "statement", "development" };
-          for (int i = 0; i < wordsDefault.Length; i++)
-          {
-            writer.WriteLine(wordsDefault[i]);
-          };
-        }
-        Console.WriteLine("Done!");
-        System.Threading.Thread.Sleep(2000);
-      }
-
-      string[] file = File.ReadAllLines(@"word_list.txt");
+      string inputGameStyle = String.Empty;
+      int gameStyle;
       List<string> words = new List<string>();
 
-      string inputDifficulty = string.Empty;
-      int difficulty;
-
+      // Game style: words or sentences
       while (true)
       {
         do
         {
-          Console.Write("Choose your difficulty:\n  [0] => easy\n  [1] => medium\n  [2] => expert\n: ");
-          inputDifficulty = Console.ReadLine();
-        } while (!int.TryParse(inputDifficulty, out difficulty));
+          Console.Write("Choose game style:\n  [0] => words\n  [1] => sentences\n: ");
+          inputGameStyle = Console.ReadLine();
+        } while (!int.TryParse(inputGameStyle, out gameStyle));
 
-        if (difficulty < 0 || difficulty > 2 )
+        if (gameStyle < 0 || gameStyle > 1)
         {
-          continue;   
+          continue;
         }
 
         break;
       }
 
-      foreach (var word in file)
+      if (gameStyle == 0)
       {
-        if ((word.Length >= 3 && word.Length <= 5) && difficulty == 0) words.Add(word);
-        else if ((word.Length >= 6 && word.Length <= 8) && difficulty == 1) words.Add(word);
-        else if (word.Length >= 9 && difficulty == 2) words.Add(word);
+        // if file doesn't exist
+        if (!File.Exists(@"word_list.txt"))
+        {
+          Console.WriteLine("File with words doesn't exist. Creating one!");
+          using (StreamWriter writer = File.AppendText(@"word_list.txt"))
+          {
+            string[] wordsDefault = { "hat", "fish", "recipe", "emotion", "statement", "development" };
+            for (int i = 0; i < wordsDefault.Length; i++)
+            {
+              // write default words
+              writer.WriteLine(wordsDefault[i]);
+            };
+          }
+          Console.WriteLine("Done!");
+          System.Threading.Thread.Sleep(2000);
+        }
+
+        string[] file = File.ReadAllLines(@"word_list.txt");
+
+        string inputDifficulty = string.Empty;
+        int difficulty;
+
+        // Difficulty: easy, medium or expert
+        while (true)
+        {
+          do
+          {
+            Console.Write("Choose your difficulty:\n  [0] => easy\n  [1] => medium\n  [2] => expert\n: ");
+            inputDifficulty = Console.ReadLine();
+          } while (!int.TryParse(inputDifficulty, out difficulty));
+
+          if (difficulty < 0 || difficulty > 2)
+          {
+            continue;
+          }
+
+          break;
+        }
+
+        // Use words according to selected difficulty
+        foreach (var word in file)
+        {
+          if ((word.Length >= 3 && word.Length <= 5) && difficulty == 0) words.Add(word);
+          else if ((word.Length >= 6 && word.Length <= 8) && difficulty == 1) words.Add(word);
+          else if (word.Length >= 9 && difficulty == 2) words.Add(word);
+        }
+      } else {
+        // if file doesn't exist
+        if (!File.Exists(@"sentence_list.txt"))
+        {
+          Console.WriteLine("File with sentences doesn't exist. Creating one!");
+          using (StreamWriter writer = File.AppendText(@"sentence_list.txt"))
+          {
+            string[] wordsDefault = {
+              "Sometimes I stare at a door or a wall and I wonder what is this reality, why am I alive, and what is this all about?",
+              "He picked up trash in his spare time to dump in his neighbor's yard.",
+              "The beach was crowded with snow leopards.",
+              "The fifty mannequin heads floating in the pool kind of freaked them out.",
+              "If you don't like toenails, you probably shouldn't look at your feet.",
+              "She was too short to see over the fence."
+            };
+            for (int i = 0; i < wordsDefault.Length; i++)
+            {
+              // write default sentences
+              writer.WriteLine(wordsDefault[i]);
+            };
+          }
+          Console.WriteLine("Done!");
+          System.Threading.Thread.Sleep(2000);
+        }
+
+        string[] file = File.ReadAllLines(@"sentence_list.txt");
+
+        // Array to list
+        foreach (var word in file)
+        {
+          words.Add(word);
+        }
       }
 
+      // List of allowed letters
       Dictionary<char, int> alphabet = new Dictionary<char, int>();
 
-      for (char i = 'a'; i < 'z'; i++)
+      for (char i = 'a'; i <= 'z'; i++)
       {
         alphabet.Add(i, 0);
       }
 
-      // System.Environment.Exit(1);
-
-      // https://developerslogblog.wordpress.com/2020/02/04/how-to-shuffle-an-array/
+      // randomise words/sentences (https://developerslogblog.wordpress.com/2020/02/04/how-to-shuffle-an-array/)
       Random random = new Random();
       for (int i = words.Count - 1; i > 0; i--)
       {
@@ -87,6 +145,7 @@ Made by Ondřej Pešek
         words[randomIndex] = temp;
       }
 
+      // stats
       int won = 0;
       int lost = 0;
 
@@ -94,7 +153,7 @@ Made by Ondřej Pešek
       {
         string word = words[i].ToLower();
         
-        int lives = words.Count; // počet pokusů = počet písmen
+        int lives = (words[i].Length > alphabet.Count / 3) ? (alphabet.Count / 3) : words[i].Length; // počet pokusů = počet písmen
         List<char> guessedLetters = new List<char>();
 
         while (true)
@@ -123,32 +182,28 @@ Made by Ondřej Pešek
           Console.WriteLine(new String((char)3, lives)); // (char)3 = ♥
           Console.ResetColor();
 
-          // existují již nějaká uhodnutá písmena?
-          if (!guessedLetters.Any())
-          {
-            output = new String('_', word.Length);
-          }
-          else
-          {
-            // print all guessed letters
-            Console.WriteLine("guessed letters: "+string.Join(", ", guessedLetters));
+          // print all guessed letters
+          Console.WriteLine("guessed letters: "+string.Join(", ", guessedLetters));
 
-            for (int e = 0; e < word.Length; e++)
+          for (int e = 0; e < word.Length; e++)
+          {
+            if (guessedLetters.Contains(word[e]))
             {
-              if (guessedLetters.Contains(word[e]))
-              {
-                output += word[e];
-              } else
-              {
-                output += "_";
-              }
+              output += word[e];
+            } else if (!char.IsLetter(word[e]))
+            {
+              output += word[e];
             }
-
-            if (output == word)
+            else
             {
-              won++;
-              break;
-            }              
+              output += "_";
+            }
+          }
+
+          if (output == word)
+          {
+            won++;
+            break;
           }
 
           Console.WriteLine(output);
@@ -197,7 +252,11 @@ Made by Ondřej Pešek
           guessedLetters.Add(input);
         }   
       }
-      Console.WriteLine("There are no more words!\n\nThank you for playing. :))");
+
+      string gameStyleWord;
+      gameStyleWord = (gameStyle == 0) ? "word" : "sentence";
+
+      Console.WriteLine($"There are no more {gameStyleWord}s!\n\nThank you for playing. :))");
     }
   }
 }
