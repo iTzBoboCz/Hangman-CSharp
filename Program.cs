@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace hangman
 {
@@ -25,6 +26,7 @@ Made by Ondřej Pešek
 
       string inputGameStyle = String.Empty;
       int gameStyle;
+      int difficulty;
       List<string> words = new List<string>();
 
       // Game style: words or sentences
@@ -66,7 +68,6 @@ Made by Ondřej Pešek
         string[] file = File.ReadAllLines(@"word_list.txt");
 
         string inputDifficulty = string.Empty;
-        int difficulty;
 
         // Difficulty: easy, medium or expert
         while (true)
@@ -93,6 +94,9 @@ Made by Ondřej Pešek
           else if (word.Length >= 9 && difficulty == 2) words.Add(word);
         }
       } else {
+        // fix CS0165
+        difficulty = 0;
+
         // if file doesn't exist
         if (!File.Exists(@"sentence_list.txt"))
         {
@@ -148,6 +152,7 @@ Made by Ondřej Pešek
       // stats
       int won = 0;
       int lost = 0;
+      string nickname = string.Empty;
 
       for (int i = 0; i < words.Count; i++)
       {
@@ -250,7 +255,51 @@ Made by Ondřej Pešek
 
           // pokud se splní podmínky, písmeno se přidá do listu uhádnutých písmen
           guessedLetters.Add(input);
-        }   
+        }
+
+        if (nickname == string.Empty)
+        {
+          // Nickname
+          while (true)
+          {
+            Console.Write("\nNickname: ");
+            nickname = Console.ReadLine();
+
+            // minimálně 3 písmena
+            Regex rx = new Regex(@"^[a-zA-ZáčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ][\wZáčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ]{2,}$");
+            MatchCollection matches = rx.Matches(nickname);
+
+            if (matches.Count != 1)
+            {
+              Console.WriteLine("Nickname must start with a letter, be atleast 3 characters long and composed of only letters and numbers.");
+              continue;
+            }
+
+            break;
+          }
+        }
+
+        int attempts = 0;
+        int attemptsWrong = 0;
+        foreach (var pair in alphabet)
+        {
+          if (pair.Value > 0)
+          {
+            attempts++;
+
+            if (!word.Contains(pair.Key)) attemptsWrong++;
+          } 
+        }
+
+        // zapsání statistik
+        using (StreamWriter writer = File.AppendText(@"stats.csv"))
+        {
+          string difficultyText = (difficulty == 0) ? "easy" : ((difficulty == 1) ? "medium" : "expert");
+          // i+1, protože hádáme 1. slovo, né 0.
+          string result = $"{nickname};{word};{attempts};{attemptsWrong};{difficultyText};{i+1}";
+
+          writer.WriteLine(result);
+        }
       }
 
       string gameStyleWord;
